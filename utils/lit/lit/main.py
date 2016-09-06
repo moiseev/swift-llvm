@@ -209,6 +209,9 @@ def main(builtinParameters = {}):
                      help="Maximum time to spend running a single test (in seconds)."
                      "0 means no time limit. [Default: 0]",
                     type=int, default=None)
+    group.add_option("", "--fail-fast", dest="failFast",
+                     help="Stop execution after the first failed test",
+                     action="store_true", default=False)
     parser.add_option_group(group)
 
     group = OptionGroup(parser, "Test Selection")
@@ -300,7 +303,8 @@ def main(builtinParameters = {}):
         isWindows = isWindows,
         params = userParams,
         config_prefix = opts.configPrefix,
-        maxIndividualTestTime = maxIndividualTestTime)
+        maxIndividualTestTime = maxIndividualTestTime,
+        failFast = opts.failFast)
 
     # Perform test discovery.
     run = lit.run.Run(litConfig,
@@ -450,7 +454,8 @@ def main(builtinParameters = {}):
                        ('Expected Failing Tests', lit.Test.XFAIL),
                        ('Timed Out Tests', lit.Test.TIMEOUT)):
         if (lit.Test.XFAIL == code and not opts.show_xfail) or \
-           (lit.Test.UNSUPPORTED == code and not opts.show_unsupported):
+           (lit.Test.UNSUPPORTED == code and not opts.show_unsupported) or \
+           (lit.Test.UNRESOLVED == code and opts.failFast):
             continue
         elts = byCode.get(code)
         if not elts:

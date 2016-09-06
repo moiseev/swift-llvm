@@ -66,10 +66,11 @@ class TestProvider(object):
         return self.queue.get()
 
 class Tester(object):
-    def __init__(self, run_instance, provider, consumer):
+    def __init__(self, run_instance, provider, consumer, failFast):
         self.run_instance = run_instance
         self.provider = provider
         self.consumer = consumer
+        self.failFast = failFast
 
     def run(self):
         while True:
@@ -89,6 +90,8 @@ class Tester(object):
             print('\nCtrl-C detected, goodbye.')
             os.kill(0,9)
         self.consumer.update(test_index, test)
+        if self.failFast and test.result.code == lit.Test.FAIL:
+            self.provider.cancel()
 
 class ThreadResultsConsumer(object):
     def __init__(self, display):
@@ -144,8 +147,8 @@ class MultiprocessResultsConsumer(object):
 
             self.display.update(test)
 
-def run_one_tester(run, provider, display):
-    tester = Tester(run, provider, display)
+def run_one_tester(run, provider, display, failFast):
+    tester = Tester(run, provider, display, failFast)
     tester.run()
 
 ###
@@ -247,7 +250,7 @@ class Run(object):
 
         # If not using multiple tasks, just run the tests directly.
         if jobs == 1:
-            run_one_tester(self, provider, consumer)
+            run_one_tester(self, provider, consumer, self.lit_config.failFast)
         else:
             # Otherwise, execute the tests in parallel
             self._execute_tests_in_parallel(task_impl, provider, consumer, jobs)
@@ -264,7 +267,7 @@ class Run(object):
     def _execute_tests_in_parallel(self, task_impl, provider, consumer, jobs):
         # Start all of the tasks.
         tasks = [task_impl(target=run_one_tester,
-                           args=(self, provider, consumer))
+                           args=(self, provider, consumer, self.lit_config.failFast))
                  for i in range(jobs)]
         for t in tasks:
             t.start()
