@@ -24,7 +24,7 @@ class LitConfig(object):
                  noExecute, debug, isWindows,
                  params, config_prefix = None,
                  maxIndividualTestTime = 0,
-                 failFast = False):
+                 maxFailures = None):
         # The name of the test runner.
         self.progname = progname
         # The items to add to the PATH environment variable.
@@ -61,7 +61,7 @@ class LitConfig(object):
             self.valgrindArgs.extend(self.valgrindUserArgs)
 
         self.maxIndividualTestTime = maxIndividualTestTime
-        self.failFast = failFast
+        self.maxFailures = maxFailures
 
     @property
     def maxIndividualTestTime(self):
