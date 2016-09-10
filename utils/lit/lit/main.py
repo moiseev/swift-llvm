@@ -271,6 +271,9 @@ def main(builtinParameters = {}):
        else:
                opts.numThreads = 1
 
+    if opts.maxFailures == 0:
+        parser.error("Setting --max-failures to 0 does not have any effect.")
+
     inputs = args
 
     # Create the user defined parameters.
